@@ -4,6 +4,18 @@ AC_PREREQ(2.59)
 AC_INIT(hdfs-ftpd, 1.0)
 
 
+AC_CHECK_LIB([config++], [main], [],[
+         echo "libconfig++ library is required for this program"
+         exit -1])
+         
+AC_CHECK_LIB([boost_program_options], [main], [],[
+         echo "boost_program_options library is required for this program"
+         exit -1])     
+
+AC_CHECK_LIB([pthread], [main], [],[
+         echo "pthread library is required for this program"
+         exit -1])
+
 AC_CANONICAL_SYSTEM
 AM_INIT_AUTOMAKE()
 
@@ -11,4 +23,3 @@ AC_PROG_CXX
 
 AC_CONFIG_FILES(Makefile src/Makefile)
 AC_OUTPUT
-
