@@ -44,6 +44,8 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 
+#include <iostream>
+
 #ifdef CFTPSERVER_CONFIG_H_PATH
 #include CFTPSERVER_CONFIG_H_PATH
 #endif
@@ -434,7 +436,6 @@ public:
 	void SetHDFSBlockSize(int BlockSize) {
 		HDFSConfig.HDFSBlockSize = BlockSize;
 	}
-
 
 	////////////////////////////////////////
 	// STATISTICS
@@ -1237,12 +1238,10 @@ public:
 	char szDirPath[ MAX_PATH + 1];
 	char szFullPath[ MAX_PATH + 1];
 
-	//KFS::KfsClient *gKfsClient; //QFS Connection
-//	KFS::KfsFileAttr *fileAttr; //QFS File Attributes
-	//int qres; //QFS Return Value
-	//QDIR qdir; //QFS Read Directory Plus Vector
-	hdfsFS fs;
+	hdfsFS fs; //HDFS Connection
 	hdfsFileInfo *fileAttr; //HDFS File Attributes
+	int numAttr; //Number of Returned Attributes
+	int indexAttr;
 };
 
 #endif // #ifdef CFTPSERVER_H

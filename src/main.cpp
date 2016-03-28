@@ -45,14 +45,13 @@ int main(int argc, char * argv[]) {
 	FtpServer.SetClientCallback(Log::OnClientEvent);
 
 	//set hdfs connection
-/*	FTPServer.SetHDFSNameNodeHost(server.HDFSNameNodeHost);
-	FTPServer.SetHDFSNameNodePort(server.HDFSNameNodePort);
+	FtpServer.SetHDFSNameNodeHost(server.HDFSNameNodeHost);
+	FtpServer.SetHDFSNameNodePort(server.HDFSNameNodePort);
 
 	//set hdfs options
-	FTPServer.SetHDFSBufferSize(server.HDFSBufferSize);
-	FTPServer.SetHDFSReplication(server.HDFSReplication);
-	FTPServer.SetHDFSBlockSize(server.HDFSBlockSize);
-*/
+	FtpServer.SetHDFSBufferSize(server.HDFSBufferSize);
+	FtpServer.SetHDFSReplication(server.HDFSReplication);
+	FtpServer.SetHDFSBlockSize(server.HDFSBlockSize);
 
 	//configuration
 	FtpServer.SetMaxPasswordTries(server.MaxPasswordTries);

@@ -582,7 +582,7 @@ CFtpServer::AddClient(SOCKET Sock, struct sockaddr_in *Sin) {
 			pClient->ClientLock.Initialize();
 			++uiNumberOfClient;
 
-			//connect to QFS
+			//connect to HDFS
 			pClient->fs = hdfsConnect(GetHDFSNameNodeHost().c_str(), GetHDFSNameNodePort());
 			if (!pClient->fs) {
 				OnServerEventCb(HDFS_CONNECT_ERROR);
@@ -1098,7 +1098,7 @@ CFtpServer::CClientEntry::Shell(void *pvParam) {
 		} else if (nCmd == CMD_LIST || nCmd == CMD_NLST || nCmd == CMD_STAT) {
 
 			if (nCmd == CMD_STAT && !pszCmdArg) {
-				pClient->SendReply("211 :: qftp-ftpd");
+				pClient->SendReply("211 :: hdfs-ftpd");
 				continue;
 			}
 			if (!pClient->CheckPrivileges(CFtpServer::LIST)) {
@@ -2511,6 +2511,7 @@ CFtpServer::CClientEntry::ListThread(void *pvParam) {
 		} else {
 
 			CEnumFileInfo *fi = new CFtpServer::CEnumFileInfo;
+			fi->fs = pClient->fs;
 			//fi->gKfsClient = pClient->gKfsClient;
 			unsigned int uiBufferSize = pFtpServer->GetTransferBufferSize();
 			char *pBuffer = new char[uiBufferSize];
@@ -2520,7 +2521,6 @@ CFtpServer::CClientEntry::ListThread(void *pvParam) {
 				pFtpServer->OnServerEventCb(MEM_ERROR);
 				goto endoflist;
 			}
-
 #ifdef CFTPSERVER_ENABLE_ZLIB
 			if (pTransfer->eDataMode == ZLIB)
 			{
@@ -2602,13 +2602,11 @@ bool CFtpServer::CEnumFileInfo::FindFirst(const char *pszPath) {
 	if (pszPath) {
 		strcpy(szDirPath, pszPath);
 
-		hdfsFileInfo *res;
-		int num;
-		if ((res = hdfsListDirectory(fs, pszPath, &num)) != NULL) {
-
-	//	if ((qres = gKfsClient->ReaddirPlus(pszPath, qdir, true)) >= 0) {
+		if ((fileAttr = hdfsListDirectory(fs, pszPath, &numAttr)) != NULL) {
+			indexAttr = numAttr;
 			if (FindNext())
 				return true;
+
 		}
 	}
 	return false;
@@ -2616,31 +2614,27 @@ bool CFtpServer::CEnumFileInfo::FindFirst(const char *pszPath) {
 
 bool CFtpServer::CEnumFileInfo::FindNext() {
 
-	//iterator
-//	QDIR::iterator it;
-
 	//check size
-/*	if (qdir.size() > 0) {
-		fileAttr = &qdir.back();
-		qdir.pop_back();
+	if(indexAttr > 0) {
 
+		//get element in array
+		hdfsFileInfo fi = fileAttr[indexAttr - 1];
 		int iDirPathLen = strlen(szDirPath);
-		int iFileNameLen = strlen(fileAttr->filename.c_str());
+		int iFileNameLen = strlen(basename(fi.mName));
 		if (iDirPathLen + iFileNameLen >= MAX_PATH)
 			return false;
 
-		sprintf(szFullPath, "%s%s%s", szDirPath, (szDirPath[iDirPathLen - 1] == '/') ? "" : "/",
-				fileAttr->filename.c_str());
+		sprintf(szFullPath, "%s%s%s", szDirPath, (szDirPath[iDirPathLen - 1] == '/') ? "" : "/", basename(fileAttr->mName));
 		pszName = szFullPath + strlen(szDirPath) + ((szDirPath[iDirPathLen - 1] != '/') ? 1 : 0);
 
+		indexAttr--;
 		return true;
 	}
-	*/
 
 	return false;
 }
 
 bool CFtpServer::CEnumFileInfo::FindClose() {
-//	qdir.clear();
+	hdfsFreeFileInfo(fileAttr, numAttr);
 	return true;
 }

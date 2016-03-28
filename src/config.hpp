@@ -17,7 +17,7 @@ void InitServerConfig() {
 	server.ListeningPort = 2100; // By default, the FTP control port is 21
 
 	server.HDFSNameNodeHost = "127.0.0.1"; //HDFS Namenode Hostname
-	server.HDFSNameNodePort = 50010; //HDFS Namenode Port
+	server.HDFSNameNodePort = 0; //HDFS Namenode Port
 	server.HDFSBufferSize = 0; //default
 	server.HDFSReplication = 0; //default
 	server.HDFSBlockSize = 0; //default
