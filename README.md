@@ -35,7 +35,7 @@ cd hdfs-ftpd
 sh autogen.sh
 ./configure
 make
-sh setclasspath.sh
+export CLASSPATH=$(hadoop classpath --glob)
 src/hdfsftpd -c config/sample.cfg
 ```
 Configuration
