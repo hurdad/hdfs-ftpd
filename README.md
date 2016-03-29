@@ -20,7 +20,7 @@ Quick Start with Cloudera CDH 5x + CentOS 7
 ========
 ```
 sudo su root
-cd /etc/yum.repo.d/
+cd /etc/yum.repos.d/
 wget https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/cloudera-cdh5.repo
 yum update
 yum install hadoop-libhdfs hadoop-libhdfs-devel boost-devel libconfig-devel java-1.8.0-openjdk-devel gcc-c++ automake git
