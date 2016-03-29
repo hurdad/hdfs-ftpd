@@ -87,7 +87,7 @@ int main(int argc, char * argv[]) {
 	if (FtpServer.StartListening(inet_addr(server.ListeningIP.c_str()), server.ListeningPort)) {
 
 		if (FtpServer.StartAccepting()) {
-			printf("-Listening.\r\n");
+			printf("-Listening ftp://%s:%i \r\n", server.ListeningIP.c_str(), server.ListeningPort);
 
 			//loop
 			for (;;)
