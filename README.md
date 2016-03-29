@@ -3,7 +3,7 @@ hdfs-ftpd
 
 Hadoop HDFS Backed C++ FTP Daemon
 
-FTP Daemon core using CFtpServer Library[http://sourceforge.net/projects/cftpserver/]
+FTP Daemon core using CFtpServer Library [http://sourceforge.net/projects/cftpserver/]
 
 Gettting Started
 ========
