@@ -8,7 +8,7 @@ FTP Daemon core using CFtpServer Library [http://sourceforge.net/projects/cftpse
 Gettting Started
 ========
 ### Requirements:
-
+* Hadoop Installation
 * Hadoop HDFS Cluster
 
 ### Shared Library Requirements:
@@ -40,6 +40,8 @@ src/hdfsftpd -c config/sample.cfg
 ```
 Configuration
 ========
+Default configuration uses hadoop configs at /etc/hadoop/conf/ [core-site.xml / hdfs-site.xml]
+
 ```
 ####################################################
 # sample config file for hdfs-ftpd v0.1
