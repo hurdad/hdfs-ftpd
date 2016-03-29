@@ -1,4 +1,4 @@
-# hdfs-ftpd
+hdfs-ftpd
 ========
 
 Hadoop HDFS Backed C++ FTP Daemon
