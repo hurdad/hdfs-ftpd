@@ -1,7 +1,7 @@
 # hdfs-ftpd
 ========
 
-HDFS Backed C++ FTP Daemon
+Hadoop HDFS Backed C++ FTP Daemon
 
 FTP Daemon core using CFtpServer Library[http://sourceforge.net/projects/cftpserver/]
 
@@ -9,7 +9,7 @@ Gettting Started
 ========
 ### Requirements:
 
-* hdfs cluster [namenode host + port]
+* Hadoop HDFS Cluster
 
 ### Shared Library Requirements:
 * libhdfs + libjvm
@@ -41,9 +41,61 @@ src/hdfsftpd -c config/sample.cfg
 Configuration
 ========
 ```
-$ src/hdfsftpd --help
-Options:
-  --help                                Options related to the program.
-  -c [ --config ] arg (=config/sample.cfg)
-                                        Configuration File
+####################################################
+# sample config file for hdfs-ftpd v0.1
+# 
+#####################################################
+
+HDFS: //HDFS Connection and Configuration
+{        
+    NameNodeHost 	= "default"; //Default [uses fs.default.name]
+    NameNodePort 	= 0;		//Default (8020) 
+    BufferSize 		= 0; 		//Default
+    Replication		= 0;		//Default
+    BlockSize		= 0;		//Default 
+};
+
+//FTP
+ListeningIP 		= "127.0.0.1";  // FTP Listening Interface
+ListeningPort 		= 2100; 		// By default, the FTP control port is 21
+CheckPassDelay 		= 500; 			// milliseconds. Bruteforcing protection.
+EnableFXP 			= true; 		// Server to Server transfers
+MaxPasswordTries 	= 3;
+NoLoginTimeout 		= 45; 			// Seconds
+NoTransferTimeout 	= 90; 			// Seconds
+
+//FTP Users
+Users:(
+	{
+		Username : "admin";
+		Password : "admin";
+		HomePath : "/";
+		Privs    : 63; // READFILE | WRITEFILE | DELETEFILE | LIST | CREATEDIR | DELETEDIR
+	},
+	{
+		Username : "anonymous";
+		Password : "";
+		HomePath : "/";
+		Privs    : 9; // READFILE | LIST 
+	}
+);
+
+//TCP Port ranges for transfers
+DataPortRange: 
+{ 
+	Start = 10000;
+	Length = 900;
+};
+
+//TCP Socket Buffer
+TransferSocketBufferSize = 65536; //64k
+
+//Dir List Buffer Size
+TransferBufferSize = 32768; //32kB
+
+//Logging
+LogDirectory 		= "logs";
+EnableUserLogging 	= true; //Add & Removing Users
+EnableClientLogging = true; //Client Operations
+EnableServerLogging = true; //General Server 
 ```
