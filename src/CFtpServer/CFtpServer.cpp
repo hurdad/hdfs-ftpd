@@ -1279,7 +1279,6 @@ CFtpServer::CClientEntry::Shell(void *pvParam) {
 					sprintf(szName, "file.%i", rand() % 9999999);
 					pszPath = pClient->BuildPath(szName);
 					if(!pszPath || hdfsExists(pClient->fs, pszPath) == -1) {
-			//		if (!pszPath || !!pClient->gKfsClient->Stat(pszPath, fileAttr)) {
 						delete[] pszPath;
 						pszPath = NULL;
 					} else
@@ -1296,7 +1295,6 @@ CFtpServer::CClientEntry::Shell(void *pvParam) {
 					pClient->CurrentTransfer.pClient = pClient;
 					if (nCmd == CMD_APPE) {
 						if((fileAttr = hdfsGetPathInfo(pClient->fs, pszPath)) != NULL) {
-						//if (!pClient->gKfsClient->Stat(pszPath, fileAttr) == 0) {
 							pClient->CurrentTransfer.RestartAt = fileAttr->mSize;
 						} else
 							pClient->CurrentTransfer.RestartAt = 0;
@@ -1364,7 +1362,6 @@ CFtpServer::CClientEntry::Shell(void *pvParam) {
 			if (pszCmdArg) {
 				pszPath = pClient->BuildPath(pszCmdArg);
 				if(pszPath && hdfsExists(pClient->fs, pszPath) == 0) {
-			//	if (pszPath && pClient->gKfsClient->Stat(pszPath, fileAttr) == 0) {
 					strcpy(pClient->szRenameFromPath, pszPath);
 					pClient->SendReply("350 File or directory exists, ready for destination name.");
 				} else
@@ -1397,11 +1394,8 @@ CFtpServer::CClientEntry::Shell(void *pvParam) {
 			}
 			if (pszCmdArg) {
 				pszPath = pClient->BuildPath(pszCmdArg);
-				if (pszPath && hdfsExists(pClient->fs, pszPath) == 0) {
-		//		if (pszPath && pClient->gKfsClient->Stat(pszPath, fileAttr) != 0) {
-
-					if (hdfsCreateDirectory(pClient->fs, pszPath) < 0) {
-					//if (pClient->gKfsClient->Mkdir(pszPath, 0777) < 0) {
+				if (pszPath && hdfsExists(pClient->fs, pszPath) < 0) {
+						if (hdfsCreateDirectory(pClient->fs, pszPath) < 0) {
 						pClient->SendReply("550 MKD Error Creating DIR.");
 					} else
 						pClient->SendReply("250 MKD command successful.");
@@ -1420,10 +1414,7 @@ CFtpServer::CClientEntry::Shell(void *pvParam) {
 			if (pszCmdArg) {
 				pszPath = pClient->BuildPath(pszCmdArg);
 				if (pszPath && hdfsExists(pClient->fs, pszPath) == 0) {
-			//	if (pszPath && pClient->gKfsClient->Stat(pszPath, fileAttr) == 0) {
-
 					if(hdfsDelete(pClient->fs, pszPath, 0) < 0) {
-					//if (pClient->gKfsClient->Rmdir(pszPath) < 0) {
 						pClient->SendReply("450 Internal error deleting the directory.");
 					} else
 						pClient->SendReply("250 Directory deleted successfully.");
@@ -2066,9 +2057,8 @@ CFtpServer::CClientEntry::StoreThread(void *pvParam)
 	} else
 		iflags |= O_TRUNC; //w|b
 
-	unsigned int uiBufferSize = pFtpServer->GetHDFSBufferSize();
+	unsigned int uiBufferSize = pFtpServer->GetTransferBufferSize();
 	char *pBuffer = new char[uiBufferSize];
-
 #ifdef CFTPSERVER_ENABLE_ZLIB
 	int nFlush, nRet;
 	char *pOutBuffer = NULL;
@@ -2092,17 +2082,11 @@ CFtpServer::CClientEntry::StoreThread(void *pvParam)
 	}
 #endif
 
-	/*hFile = pClient->gKfsClient->Open(pTransfer->szPath, iflags,
-			pFtpServer->GetQFSReplicationNumReplicas(), pFtpServer->GetQFSReplicationNumStripes(),
-			pFtpServer->GetQFSReplicationNumRecoveryStripes(),
-			pFtpServer->GetQFSReplicationStripeSize(), pFtpServer->GetQFSReplicationStriperType(),
-			0666, KFS::kKfsSTierMax, KFS::kKfsSTierMax);
-	*/
+	//open hdfs file
 	hFile = hdfsOpenFile(pClient->fs, pTransfer->szPath, iflags, pFtpServer->GetHDFSBufferSize(),
 			 pFtpServer->GetHDFSReplication(), pFtpServer->GetHDFSBlockSize());
 
-
-	if (hFile >= 0) {
+	if (hFile) {
 		if ((pTransfer->RestartAt > 0
 				&& hdfsSeek(pClient->fs, hFile, pTransfer->RestartAt) != -1)
 				|| pTransfer->RestartAt == 0) {
@@ -2176,6 +2160,7 @@ CFtpServer::CClientEntry::StoreThread(void *pvParam)
 				}
 			}
 		}
+		hdfsFlush(pClient->fs, hFile);
 	}
 	hdfsCloseFile(pClient->fs, hFile);
 
@@ -2266,7 +2251,7 @@ CFtpServer::CClientEntry::RetrieveThread(void *pvParam)
 	hFile = hdfsOpenFile(pClient->fs, pTransfer->szPath, O_RDONLY, pFtpServer->GetHDFSBufferSize(),
 			 pFtpServer->GetHDFSReplication(), pFtpServer->GetHDFSBlockSize());
 
-	if (hFile >= 0) {
+	if (hFile) {
 		if (pTransfer->RestartAt == 0 || (pTransfer->RestartAt > 0
 				&& hdfsSeek(pClient->fs, hFile, pTransfer->RestartAt) != -1)) {
 
@@ -2347,7 +2332,7 @@ CFtpServer::CClientEntry::RetrieveThread(void *pvParam)
 }
 
 // !!!  psLine must be at least CFTPSERVER_LIST_MAX_LINE_LEN (=MAX_PATH+57) char long.
-int CFtpServer::CClientEntry::GetFileListLine(char* psLine, hdfsFileInfo* attr,
+int CFtpServer::CClientEntry::GetFileListLine(char* psLine, hdfsFileInfo attr,
 		const char* pszName, bool opt_F) {
 
 	if (!psLine || !pszName)
@@ -2359,7 +2344,7 @@ int CFtpServer::CClientEntry::GetFileListLine(char* psLine, hdfsFileInfo* attr,
 
 	static const char szListFile[] = "%c%s 1 %-10s %-10s %14lli %s %2d %s %s%s\r\n";
 
-	time_t mtime = attr->mLastMod;
+	time_t mtime = attr.mLastMod;
 	struct tm *t = gmtime((time_t *) &mtime); // UTC Time
 	if (time(NULL) - mtime > 180 * 24 * 60 * 60) {
 		sprintf(szYearOrHour, "%5d", t->tm_year + 1900);
@@ -2369,62 +2354,25 @@ int CFtpServer::CClientEntry::GetFileListLine(char* psLine, hdfsFileInfo* attr,
 	//permissions
 	std::string perms;
 	std::stringstream ss;
-
-	//if (attr->mode == KFS::kKfsModeUndef) {
-	//	perms = "";
-//	} else {
-		for (int i = 8; i > 0;) {
-			const char* perm[2] = { "---", "rwx" };
-			for (int k = 0; k < 3; k++) {
-				ss << perm[(attr->mPermissions >> i--) & 1][k];
-			}
+	for (int i = 8; i > 0;) {
+		const char* perm[2] = { "---", "rwx" };
+		for (int k = 0; k < 3; k++) {
+			ss << perm[(attr.mPermissions >> i--) & 1][k];
 		}
-		perms = ss.str();
-//	}
+	}
+	perms = ss.str();
 
 	//username
 	const char *user;
-/*	if (attr->user == KFS::kKfsUserNone) {
-//		user = "user";
-//	} else {
-		UserNames::const_iterator it = mUserNames.find(attr->mOwner);
-		if (it == mUserNames.end()) {
-			std::string user;
-			std::string group;
-		//	gKfsClient->GetUserAndGroupNames(attr->mOwner, attr->mOwner, user, group);
-			user = attr->mOwner;
-			group = attr->mGroup;
-			it = mUserNames.insert(std::make_pair(attr->user, user)).first;
-			mGroupNames[attr->group] = group;
-		}
-		user = it->second.c_str();
-//	}
- * */
-	user = attr->mOwner;
+	user = attr.mOwner;
 
 	//group
 	const char *group;
-//	if (attr->group == KFS::kKfsGroupNone) {
-//		group = "group";
-//	} else {
-	/*	GroupNames::const_iterator it = mGroupNames.find(attr->mGroup);
-		if (it == mGroupNames.end()) {
-			std::string user;
-			std::string group;
-		//	gKfsClient->GetUserAndGroupNames(attr->user, attr->group, user, group);
-			user = attr->mOwner;
-			group = attr->mGroup;
-			it = mGroupNames.insert(make_pair(attr->group, group)).first;
-			mUserNames[attr->mOwner] = user;
-		}
-		group = it->second.c_str();
-	//}
-*/
-	group = attr->mGroup;
+	group = attr.mGroup;
 
-	int iLineLen = sprintf(psLine, szListFile, (attr->mKind == kObjectKindDirectory) ? 'd' : '-', perms.c_str(), user,
-			group, attr->mSize, pszMonth[t->tm_mon], t->tm_mday, szYearOrHour, pszName,
-			(opt_F && attr->mKind == kObjectKindDirectory ? "/" : ""));
+	int iLineLen = sprintf(psLine, szListFile, (attr.mKind == kObjectKindDirectory) ? 'd' : '-', perms.c_str(), user,
+			group, attr.mSize, pszMonth[t->tm_mon], t->tm_mday, szYearOrHour, pszName,
+			(opt_F && attr.mKind == kObjectKindDirectory ? "/" : ""));
 
 	return iLineLen;
 }
@@ -2489,8 +2437,6 @@ CFtpServer::CClientEntry::ListThread(void *pvParam) {
 	CFtpServer::CClientEntry *pClient = (CFtpServer::CClientEntry*) pvParam;
 	CFtpServer *pFtpServer = pClient->pFtpServer;
 	struct DataTransfer_t *pTransfer = &pClient->CurrentTransfer;
-
-
 	hdfsFileInfo *fileAttr = pTransfer->fileAttr;
 
 	int iFileLineLen = 0;
@@ -2501,7 +2447,7 @@ CFtpServer::CClientEntry::ListThread(void *pvParam) {
 		if (pTransfer->opt_d || fileAttr->mKind == kObjectKindFile) {
 
 			char *pszName = strrchr(pTransfer->szPath, '/');
-			iFileLineLen = pClient->GetFileListLine(psFileLine, fileAttr,
+			iFileLineLen = pClient->GetFileListLine(psFileLine, *fileAttr,
 					((pszName && pszName[1]) ? pszName + 1 : "."), pTransfer->opt_F);
 
 			if (iFileLineLen > 0)
@@ -2512,7 +2458,6 @@ CFtpServer::CClientEntry::ListThread(void *pvParam) {
 
 			CEnumFileInfo *fi = new CFtpServer::CEnumFileInfo;
 			fi->fs = pClient->fs;
-			//fi->gKfsClient = pClient->gKfsClient;
 			unsigned int uiBufferSize = pFtpServer->GetTransferBufferSize();
 			char *pBuffer = new char[uiBufferSize];
 			unsigned int nBufferPos = 0;
@@ -2560,7 +2505,8 @@ CFtpServer::CClientEntry::ListThread(void *pvParam) {
 
 			} // else Directory doesn't exist anymore..
 
-			endoflist: if (fi)
+			endoflist:
+			if (fi)
 				delete fi;
 			if (pBuffer)
 				delete[] pBuffer;
@@ -2570,7 +2516,7 @@ CFtpServer::CClientEntry::ListThread(void *pvParam) {
 #endif
 		}
 		delete[] psFileLine;
-
+		hdfsFreeFileInfo(fileAttr, 1);
 	} else
 		pFtpServer->OnServerEventCb(MEM_ERROR);
 
@@ -2602,7 +2548,7 @@ bool CFtpServer::CEnumFileInfo::FindFirst(const char *pszPath) {
 	if (pszPath) {
 		strcpy(szDirPath, pszPath);
 
-		if ((fileAttr = hdfsListDirectory(fs, pszPath, &numAttr)) != NULL) {
+		if ((fileAttrs = hdfsListDirectory(fs, pszPath, &numAttr)) != NULL) {
 			indexAttr = numAttr;
 			if (FindNext())
 				return true;
@@ -2618,13 +2564,13 @@ bool CFtpServer::CEnumFileInfo::FindNext() {
 	if(indexAttr > 0) {
 
 		//get element in array
-		hdfsFileInfo fi = fileAttr[indexAttr - 1];
+		fileAttr = fileAttrs[indexAttr - 1];
 		int iDirPathLen = strlen(szDirPath);
-		int iFileNameLen = strlen(basename(fi.mName));
+		int iFileNameLen = strlen(basename(fileAttr.mName));
 		if (iDirPathLen + iFileNameLen >= MAX_PATH)
 			return false;
 
-		sprintf(szFullPath, "%s%s%s", szDirPath, (szDirPath[iDirPathLen - 1] == '/') ? "" : "/", basename(fileAttr->mName));
+		sprintf(szFullPath, "%s%s%s", szDirPath, (szDirPath[iDirPathLen - 1] == '/') ? "" : "/", basename(fileAttr.mName));
 		pszName = szFullPath + strlen(szDirPath) + ((szDirPath[iDirPathLen - 1] != '/') ? 1 : 0);
 
 		indexAttr--;
@@ -2635,6 +2581,6 @@ bool CFtpServer::CEnumFileInfo::FindNext() {
 }
 
 bool CFtpServer::CEnumFileInfo::FindClose() {
-	hdfsFreeFileInfo(fileAttr, numAttr);
+	hdfsFreeFileInfo(fileAttrs, numAttr);
 	return true;
 }

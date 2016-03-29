@@ -1155,7 +1155,7 @@ private:
 	 * @warning  psLine must be at least CFTPSERVER_LIST_MAX_LINE_LEN chars long.
 	 */
 	int
-	GetFileListLine(char* psLine, hdfsFileInfo* attr, const char* pszName, bool opt_F);
+	GetFileListLine(char* psLine, hdfsFileInfo attr, const char* pszName, bool opt_F);
 
 	/**
 	 * Copy the list line to a buffer, and send it to the client when full.
@@ -1187,12 +1187,6 @@ private:
 	class CFtpServer *pFtpServer;
 
 	hdfsFS fs; //HDFS Connection
-
-	typedef std::map<int, std::string> UserNames;
-	typedef std::map<int, std::string> GroupNames;
-
-	UserNames mUserNames; //QFS Users
-	GroupNames mGroupNames; //QFS Groups
 
 	/**
 	 * Send a reply to the Client.
@@ -1239,7 +1233,8 @@ public:
 	char szFullPath[ MAX_PATH + 1];
 
 	hdfsFS fs; //HDFS Connection
-	hdfsFileInfo *fileAttr; //HDFS File Attributes
+	hdfsFileInfo *fileAttrs; //HDFS File Attributes
+	hdfsFileInfo fileAttr; //HDFS File Attribute
 	int numAttr; //Number of Returned Attributes
 	int indexAttr;
 };
