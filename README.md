@@ -23,7 +23,7 @@ sudo su root
 cd /etc/yum.repo.d/
 wget https://archive.cloudera.com/cdh5/redhat/7/x86_64/cdh/cloudera-cdh5.repo
 yum update
-yum install hadoop-libhdfs hadoop-libhdfs-devel boost-devel libconfig-devel java-1.8.0-openjdk-headless
+yum install hadoop-libhdfs hadoop-libhdfs-devel boost-devel libconfig-devel java-1.8.0-openjdk-headless gcc-c++ automake git
 echo '/usr/lib/jvm/java/jre/lib/amd64/server/' > /etc/ld.so.conf.d/java.conf 
 echo '/usr/lib/hadoop/lib/native/' > /etc/ld.so.conf.d/hadoop.conf 
 ldconfig
