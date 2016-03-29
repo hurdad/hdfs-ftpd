@@ -57,36 +57,17 @@ void LoadServerConfig(const char * configFile) {
 	//
 	// Parse Config
 	//
-/*
+
 	//HDFS
 	cfg.lookupValue("HDFS.NameNodeHost", server.HDFSNameNodeHost);
-	cfg.lookupValue("HDFS.NameNodePort", server.HDFSNameNodePort);
+	int HDFSNameNodePort =  server.HDFSNameNodePort;
+	cfg.lookupValue("HDFS.NameNodePort", HDFSNameNodePort);
+	server.HDFSNameNodePort = HDFSNameNodePort;
 	cfg.lookupValue("HDFS.BufferSize", server.HDFSBufferSize);
-	cfg.lookupValue("HDFS.Replication", server.HDFSReplication);
-	cfg.lookupValue("HDFS.BlockSize", server.HDFSBlockSize);
-
-
-	//QFS
-	/*
-	cfg.lookupValue("QFS.MetaServerHost", server.QFSMetaServerHost);
-	int QFSMetaServerPort = server.QFSMetaServerPort;
-	cfg.lookupValue("QFS.MetaServerPort", QFSMetaServerPort);
-	server.QFSMetaServerPort = QFSMetaServerPort;
-
-	cfg.lookupValue("QFS.MaxRetryPerOp", server.QFSMaxRetryPerOp);
-	cfg.lookupValue("QFS.RetryDelay", server.QFSRetryDelay);
-	cfg.lookupValue("QFS.QFSDefaultIOTimeout", server.QFSDefaultIOTimeout);
-
-	cfg.lookupValue("QFS.Replication.StripeSize", server.QFSReplicationStripeSize);
-	cfg.lookupValue("QFS.Replication.NumStripes", server.QFSReplicationNumStripes);
-	cfg.lookupValue("QFS.Replication.NumRecoveryStripes", server.QFSReplicationNumRecoveryStripes);
-	cfg.lookupValue("QFS.Replication.NumReplicas", server.QFSReplicationNumReplicas);
-
-	cfg.lookupValue("QFS.SkipHoles", server.QFSSkipHoles);
-	cfg.lookupValue("QFS.ReadBufferSize", server.QFSReadBufferSize);
-	cfg.lookupValue("QFS.WriteBufferSize", server.QFSWriteBufferSize);
-	cfg.lookupValue("QFS.ReadAheadBufferSize", server.QFSReadAheadBufferSize);
-	*/
+	int HDFSReplication = server.HDFSReplication;
+	cfg.lookupValue("HDFS.Replication", HDFSReplication);
+	server.HDFSReplication = HDFSReplication;
+	cfg.lookupValue("HDFS.BlockSize", HDFSReplication);
 
 	//FTP
 	cfg.lookupValue("ListeningIP", server.ListeningIP);
