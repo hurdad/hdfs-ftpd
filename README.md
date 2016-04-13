@@ -36,6 +36,7 @@ sh autogen.sh
 ./configure
 make
 export CLASSPATH=$(hadoop classpath --glob)
+export LD_LIBRARY_PATH=/usr/lib/hadoop/lib/native/:$LD_LIBRARY_PATH
 src/hdfsftpd -c config/sample.cfg
 ```
 Configuration
